@@ -86,6 +86,30 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
               </button>
             </div>
 
+            {/* Free Shipping Progress Indicator */}
+            {items.length > 0 && (
+              <div className="px-6 py-4 bg-white/[0.02] border-b border-white/[0.06] space-y-2">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span className="text-gray-400">
+                    {subtotal >= 75 ? (
+                      <span className="text-emerald-400 font-bold">🎉 Free Shipping Unlocked!</span>
+                    ) : (
+                      <>
+                        Add <span className="text-brand-400 font-bold">{formatCurrency(75 - subtotal)}</span> more for Free Shipping
+                      </>
+                    )}
+                  </span>
+                  <span className="text-gray-400">{Math.min(100, Math.round((subtotal / 75) * 100))}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-surface-950 rounded-full overflow-hidden border border-white/[0.04]">
+                  <div
+                    className="h-full bg-brand-gradient transition-all duration-500 ease-out"
+                    style={{ width: `${Math.min(100, (subtotal / 75) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Cart Items List */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {items.length === 0 ? (

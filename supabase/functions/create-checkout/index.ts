@@ -124,6 +124,7 @@ serve(async (req) => {
       mode: 'payment',
       customer_email,
       line_items: lineItems,
+      allow_promotion_codes: true,
       shipping_address_collection: {
         allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'ES', 'IT', 'NL', 'BE'],
       },

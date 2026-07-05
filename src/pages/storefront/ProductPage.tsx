@@ -103,6 +103,30 @@ export const ProductPage: React.FC = () => {
             />
           )}
 
+          {/* Urgency & Social Proof Widget */}
+          {selectedVariant && (
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4 space-y-3">
+              {/* Dynamic Viewer Counter */}
+              <div className="flex items-center gap-2 text-xs text-brand-300 font-medium">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                </span>
+                <span>
+                  🔥 {Math.floor(Math.random() * 18) + 12} people are viewing this product right now
+                </span>
+              </div>
+
+              {/* Scarcity Indicator */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-amber-500 font-semibold">⚡ Limited Stock Drop:</span>
+                <span className="text-gray-400">
+                  Only a few items left in size <span className="text-white font-bold">{selectedVariant.size}</span>
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Quantity and Add to Cart */}
           <div className="space-y-4 pt-6 border-t border-white/[0.06]">
             <div className="flex items-center gap-4">

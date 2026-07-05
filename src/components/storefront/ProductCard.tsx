@@ -1,26 +1,50 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, Sparkles } from 'lucide-react'
 import { Product } from '../../api/products'
 import { formatCurrency } from '../../lib/utils'
+import { LiveModelRunway } from './LiveModelRunway'
 
 interface ProductCardProps {
   product: Product
+  runwayMode?: boolean
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, runwayMode = false }) => {
+  const [isHovered, setIsHovered] = useState(false)
+
+  const showRunway = runwayMode || isHovered
+
   return (
-    <div className="glass-card flex flex-col h-full overflow-hidden group">
-      {/* Product Image Panel */}
+    <div 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="glass-card flex flex-col h-full overflow-hidden group"
+    >
+      {/* Product Image Panel / Live Runway */}
       <Link to={`/product/${product.slug}`} className="relative aspect-square overflow-hidden bg-surface-950">
-        <img
-          src={product.thumbnail_url || 'https://via.placeholder.com/400'}
-          alt={product.name}
-          className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-        />
+        {showRunway ? (
+          <LiveModelRunway
+            productName={product.name}
+            designUrl={product.thumbnail_url || ''}
+            garmentColor={product.name.toLowerCase().includes('white') ? '#eaeaea' : '#0e0e0e'}
+            isActive={showRunway}
+          />
+        ) : (
+          <img
+            src={product.thumbnail_url || 'https://via.placeholder.com/400'}
+            alt={product.name}
+            className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+          />
+        )}
         {product.is_featured && (
-          <span className="absolute top-3 left-3 bg-brand-gradient text-[10px] font-bold text-white px-2.5 py-1 rounded-full uppercase tracking-wider shadow-glow-sm">
+          <span className="absolute top-3 left-3 bg-brand-gradient text-[10px] font-bold text-white px-2.5 py-1 rounded-full uppercase tracking-wider shadow-glow-sm z-10">
             Featured
+          </span>
+        )}
+        {isHovered && !runwayMode && (
+          <span className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-brand-300 border border-brand-500/25 px-2 py-1 rounded uppercase tracking-widest z-10 flex items-center gap-1 animate-pulse">
+            <Sparkles className="h-2 w-2" /> Live Walk
           </span>
         )}
       </Link>

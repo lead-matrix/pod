@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, Save } from 'lucide-react'
+import { ArrowLeft, Loader2, Save, Sparkles } from 'lucide-react'
 import { DesignUploader } from '../../components/admin/DesignUploader'
 import { VariantPricing } from '../../components/admin/VariantPricing'
 import { MockupPreview } from '../../components/admin/MockupPreview'
 import { usePrintfulProductDetails, useCreateMockupTask } from '../../hooks/usePrintful'
 import { useCreateProduct } from '../../hooks/useProducts'
 import { printfulApi } from '../../api/printful'
+import { AIDesignLab } from '../../components/storefront/AIDesignLab'
 import toast from 'react-hot-toast'
 
 export const AdminProductCreate: React.FC = () => {
@@ -23,6 +24,7 @@ export const AdminProductCreate: React.FC = () => {
   const [description, setDescription] = useState('')
   const [designUrl, setDesignUrl] = useState('')
   const [designPath, setDesignPath] = useState('')
+  const [isAISpotlightOpen, setIsAISpotlightOpen] = useState(false)
   const [selectedVariantIds, setSelectedVariantIds] = useState<number[]>([])
   const [pricingMap, setPricingMap] = useState<Record<number, { retail_price: number; compare_at_price?: number }>>({})
   const [mockupTaskId, setMockupTaskId] = useState<string | null>(null)
@@ -248,8 +250,21 @@ export const AdminProductCreate: React.FC = () => {
         {/* Right Col: Media files and mockup preview tools */}
         <div className="space-y-6">
           {/* File uploader */}
-          <div className="glass-card p-6">
+          <div className="glass-card p-6 space-y-4">
             <DesignUploader onUploadComplete={handleUploadComplete} />
+            <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-white/[0.06]"></div>
+              <span className="flex-shrink mx-4 text-[9px] text-gray-500 font-bold uppercase tracking-widest">OR</span>
+              <div className="flex-grow border-t border-white/[0.06]"></div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAISpotlightOpen(true)}
+              className="w-full py-2.5 rounded-xl border border-brand-500/25 bg-brand-500/10 hover:bg-brand-500/20 text-xs font-bold text-brand-300 transition-colors uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>Generate Design with AI</span>
+            </button>
           </div>
 
           {/* Mockup trigger action */}
@@ -276,6 +291,16 @@ export const AdminProductCreate: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* AI Design Lab overlay */}
+      <AIDesignLab
+        isOpen={isAISpotlightOpen}
+        onClose={() => setIsAISpotlightOpen(false)}
+        onSelectDesign={(url) => {
+          setDesignUrl(url)
+          setDesignPath('ai-generated-design.png')
+        }}
+      />
     </form>
   )
 }

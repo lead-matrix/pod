@@ -50,7 +50,18 @@ export const Header: React.FC = () => {
             <nav className="hidden md:flex items-center gap-6">
               <Link to="/" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Home</Link>
               <Link to="/shop" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Shop</Link>
-              <Link to="/about" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">About</Link>
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-ai-design-lab'))}
+                className="text-sm font-medium text-brand-400 hover:text-brand-300 transition-colors uppercase tracking-wider font-bold flex items-center gap-1 cursor-pointer"
+              >
+                AI Design Lab
+              </button>
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-fitting-room'))}
+                className="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-wider font-bold flex items-center gap-1 cursor-pointer"
+              >
+                Dressing Mirror
+              </button>
             </nav>
           </div>
 
@@ -133,6 +144,24 @@ export const Header: React.FC = () => {
             >
               Shop
             </Link>
+            <button
+              onClick={() => {
+                setIsOpen(false)
+                window.dispatchEvent(new CustomEvent('open-ai-design-lab'))
+              }}
+              className="w-full text-left block px-3 py-2 rounded-xl text-base font-medium text-brand-400 hover:bg-white/[0.05]"
+            >
+              AI Design Lab
+            </button>
+            <button
+              onClick={() => {
+                setIsOpen(false)
+                window.dispatchEvent(new CustomEvent('open-fitting-room'))
+              }}
+              className="w-full text-left block px-3 py-2 rounded-xl text-base font-medium text-purple-400 hover:bg-white/[0.05]"
+            >
+              Dressing Mirror
+            </button>
             {isAdmin && (
               <Link
                 to="/admin"

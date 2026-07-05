@@ -7,6 +7,7 @@ import { Search } from 'lucide-react'
 export const ShopPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
+  const [runwayModeEnabled, setRunwayModeEnabled] = useState(false)
 
   const categorySlug = searchParams.get('category') || undefined
 
@@ -86,23 +87,38 @@ export const ShopPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Search Input */}
-            <div className="relative w-full max-w-sm md:ml-auto">
-              <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
-                <Search className="h-4 w-4" />
-              </span>
-              <input
-                type="text"
-                placeholder="Search collection items..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="glass-input pl-10 w-full py-2.5"
-              />
+            {/* Mode Selector & Search Input */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto md:ml-auto">
+              {/* Runway Live Mode Switch */}
+              <button
+                onClick={() => setRunwayModeEnabled(!runwayModeEnabled)}
+                className={`w-full sm:w-auto px-4 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  runwayModeEnabled 
+                    ? 'border-brand-500 bg-brand-500/10 text-brand-300 shadow-glow-sm' 
+                    : 'border-white/[0.08] bg-white/[0.02] text-gray-400 hover:text-white'
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full bg-brand-400 animate-ping" />
+                <span>Runway Walk Mode</span>
+              </button>
+
+              <div className="relative w-full sm:w-64">
+                <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
+                  <Search className="h-4 w-4" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search drops..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="glass-input pl-10 w-full py-2.5"
+                />
+              </div>
             </div>
           </div>
 
           {/* Product Cards Grid */}
-          <ProductGrid products={products} loading={isLoading} />
+          <ProductGrid products={products} loading={isLoading} runwayMode={runwayModeEnabled} />
         </div>
       </div>
     </div>

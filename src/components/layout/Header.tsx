@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingBag, User as UserIcon, Menu, X, Shield } from 'lucide-react'
 import { useCart } from '../../hooks/useCart'
 import { useAuth } from '../../hooks/useAuth'
 import { CartDrawer } from '../storefront/CartDrawer'
+import { useSettingsStore } from '../../store/settingsStore'
 
 export const Header: React.FC = () => {
   const { cartCount } = useCart()
@@ -11,15 +12,38 @@ export const Header: React.FC = () => {
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const { settings } = useSettingsStore()
+  
+  // Rotating announcements index logic
+  const [currentAnnIdx, setCurrentAnnIdx] = useState(0)
+
+  useEffect(() => {
+    if (!settings.announcements || settings.announcements.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentAnnIdx((prev) => (prev + 1) % settings.announcements.length)
+    }, 4500)
+    return () => clearInterval(timer)
+  }, [settings.announcements])
+
+  const hasAnnouncements = settings.announcements && settings.announcements.length > 0
 
   return (
     <>
+      {/* Dynamic Announcement Bar */}
+      {hasAnnouncements && (
+        <div className="w-full bg-brand-gradient py-1.5 px-4 text-center text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white shadow-glow-sm relative z-50">
+          <div className="transition-all duration-500 ease-in-out">
+            {settings.announcements[currentAnnIdx]}
+          </div>
+        </div>
+      )}
+
       <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-[#06060a]/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <div className="flex items-center gap-8">
             <Link to="/" className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span className="bg-brand-gradient bg-clip-text text-transparent">ThreadDrop</span>
+              <span className="bg-brand-gradient bg-clip-text text-transparent">{settings.storeName}</span>
             </Link>
 
             {/* Desktop Navigation */}

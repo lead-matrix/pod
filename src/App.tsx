@@ -22,6 +22,9 @@ import { AdminOrders } from './pages/admin/AdminOrders'
 import { AdminOrderDetail } from './pages/admin/AdminOrderDetail'
 import { AdminCatalog } from './pages/admin/AdminCatalog'
 import { AdminSettings } from './pages/admin/AdminSettings'
+import { AdminGuide } from './pages/admin/AdminGuide'
+import { AdminMedia } from './pages/admin/AdminMedia'
+import { AdminMarketing } from './pages/admin/AdminMarketing'
 
 import { useAuthStore } from './store/authStore'
 
@@ -72,6 +75,9 @@ export const App: React.FC = () => {
             <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
             <Route path="/admin/catalog" element={<AdminCatalog />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/guide" element={<AdminGuide />} />
+            <Route path="/admin/media" element={<AdminMedia />} />
+            <Route path="/admin/marketing" element={<AdminMarketing />} />
           </Route>
         </Route>
       </Routes>

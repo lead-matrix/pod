@@ -1,8 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import { useSettingsStore } from '../../store/settingsStore'
 
 export const HeroSection: React.FC = () => {
+  const { settings } = useSettingsStore()
+
   return (
     <section className="relative overflow-hidden py-24 md:py-32">
       {/* Background glow effects */}
@@ -14,11 +17,10 @@ export const HeroSection: React.FC = () => {
           ✨ New Season Dropped
         </div>
         <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl max-w-4xl mx-auto leading-none">
-          Wear the Design.{' '}
-          <span className="bg-brand-gradient bg-clip-text text-transparent">Automatic Fulfillment.</span>
+          {settings.heroTitle}
         </h1>
         <p className="mt-6 text-lg text-gray-400 max-w-2xl mx-auto">
-          High-end street fashion customized by you, manufactured on-demand by Printful, and shipped directly to your door. Built for creators.
+          {settings.heroSubtitle}
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link

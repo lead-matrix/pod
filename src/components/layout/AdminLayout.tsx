@@ -8,7 +8,10 @@ import {
   FolderOpen,
   ArrowLeft,
   Shield,
-  Loader2
+  Loader2,
+  Image,
+  Ticket,
+  BookOpen
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -35,7 +38,10 @@ export const AdminLayout: React.FC = () => {
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { name: 'Store Products', path: '/admin/products', icon: Layers },
     { name: 'Printful Catalog', path: '/admin/catalog', icon: FolderOpen },
+    { name: 'Media Library', path: '/admin/media', icon: Image },
+    { name: 'Marketing', path: '/admin/marketing', icon: Ticket },
     { name: 'Orders', path: '/admin/orders', icon: ShoppingBag },
+    { name: 'Guide', path: '/admin/guide', icon: BookOpen },
     { name: 'Settings', path: '/admin/settings', icon: Settings },
   ]
 

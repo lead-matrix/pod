@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { Loader2, Mail, Lock, User, ArrowRight, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '../../store/authStore'
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('')
@@ -134,7 +135,7 @@ export const LoginPage: React.FC = () => {
                 placeholder="Full name (optional)"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="glass-input pl-10 w-full"
+                className="glass-input !pl-10 w-full"
                 autoComplete="name"
               />
             </div>
@@ -152,7 +153,7 @@ export const LoginPage: React.FC = () => {
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="glass-input pl-10 w-full"
+              className="glass-input !pl-10 w-full"
               autoComplete="email"
             />
           </div>
@@ -170,7 +171,7 @@ export const LoginPage: React.FC = () => {
               placeholder={isSignUp ? 'Password (min 6 characters)' : 'Password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="glass-input pl-10 w-full"
+              className="glass-input !pl-10 w-full"
               autoComplete={isSignUp ? 'new-password' : 'current-password'}
             />
           </div>
@@ -207,6 +208,39 @@ export const LoginPage: React.FC = () => {
               <>Sign In <ArrowRight className="h-4 w-4" /></>
             )}
           </button>
+
+          {/* Demo Bypass Options for Immediate Experience */}
+          <div className="pt-4 border-t border-white/[0.06] space-y-3">
+            <div className="text-center">
+              <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                Fast Experience Demo Mode
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  useAuthStore.getState().signInDemo('customer')
+                  toast.success('Signed in as Demo Customer!')
+                  navigate('/account')
+                }}
+                className="flex items-center justify-center py-2 px-3 rounded-lg text-xs font-semibold text-gray-300 bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:text-white transition-all"
+              >
+                Demo Customer
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  useAuthStore.getState().signInDemo('admin')
+                  toast.success('Signed in as Demo Admin!')
+                  navigate('/admin')
+                }}
+                className="flex items-center justify-center py-2 px-3 rounded-lg text-xs font-semibold text-brand-400 bg-brand-500/10 border border-brand-500/20 hover:bg-brand-500/20 hover:text-brand-300 transition-all"
+              >
+                Demo Admin
+              </button>
+            </div>
+          </div>
 
           {isSignUp && (
             <p className="text-center text-xs text-gray-600">

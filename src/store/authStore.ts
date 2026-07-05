@@ -18,6 +18,7 @@ interface AuthState {
   initialized: boolean
   initialize: () => Promise<void>
   signOut: () => Promise<void>
+  signInDemo: (role: 'admin' | 'customer') => void
 }
 
 // Guard — prevents duplicate DB profile fetches when auth fires rapidly
@@ -66,6 +67,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Guard: only run once
     if (get().initialized) return
 
+    // FIX: Check for persistent demo session first
+    const demoSessionStr = localStorage.getItem('demo_auth_session')
+    if (demoSessionStr) {
+      try {
+        const { user, profile } = JSON.parse(demoSessionStr)
+        set({ user, profile, loading: false, initialized: true })
+        return
+      } catch {
+        localStorage.removeItem('demo_auth_session')
+      }
+    }
+
     try {
       const { data: { session } } = await supabase.auth.getSession()
 
@@ -84,6 +97,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Listen for auth state changes (login, logout, token refresh)
       supabase.auth.onAuthStateChange(async (_event, session) => {
+        // If a demo session is currently active, ignore Supabase listener updates
+        if (localStorage.getItem('demo_auth_session')) return
+
         if (session?.user) {
           const fetched = await fetchProfile(session.user.id)
           set((state) => ({
@@ -107,7 +123,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     set({ loading: true })
     _lastFetchedUserId = null
+    localStorage.removeItem('demo_auth_session')
     await supabase.auth.signOut()
     set({ user: null, profile: null, loading: false })
+  },
+
+  signInDemo: (role: 'admin' | 'customer') => {
+    const mockUser = {
+      id: role === 'admin' ? 'demo-admin-id' : 'demo-customer-id',
+      email: role === 'admin' ? 'admin@threaddrop.com' : 'demo@threaddrop.com',
+      user_metadata: {
+        full_name: role === 'admin' ? 'Demo Admin' : 'Demo Customer',
+      },
+    } as any
+
+    const mockProfile: UserProfile = {
+      id: mockUser.id,
+      email: mockUser.email,
+      full_name: mockUser.user_metadata.full_name,
+      avatar_url: null,
+      role: role,
+      phone: null,
+    }
+
+    // Persist mock session so page reload doesn't sign them out
+    localStorage.setItem('demo_auth_session', JSON.stringify({ user: mockUser, profile: mockProfile }))
+    set({ user: mockUser, profile: mockProfile, loading: false, initialized: true })
   },
 }))

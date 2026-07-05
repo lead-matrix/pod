@@ -83,9 +83,7 @@ export const ordersApi = {
   }): Promise<{ url: string; session_id: string; order_id: string }> => {
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
 
@@ -106,6 +104,8 @@ export const ordersApi = {
       .select('*, order_items(*)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
+      // FIX #7: Limit customer order history to 50 most recent
+      .limit(50)
 
     if (error) throw error
     return data as Order[]
@@ -122,13 +122,24 @@ export const ordersApi = {
     return data as Order
   },
 
-  // Admin-only calls
-  getAdminOrders: async (): Promise<Order[]> => {
-    const { data, error } = await supabase
+  // FIX #7: Pagination for admin order list
+  getAdminOrders: async (options?: { page?: number; pageSize?: number; status?: Order['status'] }): Promise<Order[]> => {
+    const page = options?.page ?? 1
+    const pageSize = options?.pageSize ?? 50
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
+    let query = supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false })
+      .range(from, to)
 
+    if (options?.status) {
+      query = query.eq('status', options.status)
+    }
+
+    const { data, error } = await query
     if (error) throw error
     return data as Order[]
   },
@@ -150,12 +161,8 @@ export const ordersApi = {
   resubmitToPrintful: async (_orderId: string): Promise<void> => {
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/printful-proxy/orders`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     })
-    // NOTE: In production, this can also call a dedicated resubmit endpoint or trigger
-    // the Stripe webhook logic.
     if (!response.ok) {
       throw new Error(`Failed to resubmit: ${response.statusText}`)
     }

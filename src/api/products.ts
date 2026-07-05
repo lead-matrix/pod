@@ -60,6 +60,12 @@ export interface Product {
   product_images?: ProductImage[]
 }
 
+// ─── Pagination ────────────────────────────────────────────────
+export interface PaginationOptions {
+  page?: number   // 1-based
+  pageSize?: number
+}
+
 export const productsApi = {
   getCategories: async (): Promise<Category[]> => {
     const { data, error } = await supabase
@@ -72,33 +78,41 @@ export const productsApi = {
     return data as Category[]
   },
 
-  getProducts: async (options?: { categorySlug?: string; featuredOnly?: boolean; search?: string }): Promise<Product[]> => {
+  // FIX #1: Eliminate N+1 – resolve category via a nested filter instead of
+  // a separate round-trip; also accepts stable primitives for the query key.
+  getProducts: async (options?: {
+    categorySlug?: string
+    featuredOnly?: boolean
+    search?: string
+    page?: number
+    pageSize?: number
+  }): Promise<Product[]> => {
+    const page = options?.page ?? 1
+    const pageSize = options?.pageSize ?? 24
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
     let query = supabase
       .from('products')
-      .select('*, category:categories(*)')
+      .select('*, category:categories!inner(*)')
       .eq('is_active', true)
+      .range(from, to)
+      .order('created_at', { ascending: false })
 
     if (options?.featuredOnly) {
       query = query.eq('is_featured', true)
     }
 
+    // FIX: Filter by category slug directly via the join – no extra query
     if (options?.categorySlug) {
-      const { data: cat } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('slug', options.categorySlug)
-        .single()
-
-      if (cat) {
-        query = query.eq('category_id', cat.id)
-      }
+      query = query.eq('categories.slug', options.categorySlug)
     }
 
     if (options?.search) {
       query = query.ilike('name', `%${options.search}%`)
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false })
+    const { data, error } = await query
     if (error) throw error
     return data as Product[]
   },
@@ -114,11 +128,18 @@ export const productsApi = {
     return data as Product
   },
 
-  getAdminProducts: async (): Promise<Product[]> => {
+  // FIX #7: Pagination for admin list
+  getAdminProducts: async (options?: PaginationOptions): Promise<Product[]> => {
+    const page = options?.page ?? 1
+    const pageSize = options?.pageSize ?? 50
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
     const { data, error } = await supabase
       .from('products')
       .select('*, category:categories(*)')
       .order('created_at', { ascending: false })
+      .range(from, to)
 
     if (error) throw error
     return data as Product[]
@@ -142,34 +163,23 @@ export const productsApi = {
   ): Promise<Product> => {
     const slug = generateSlug(product.name)
 
-    // Insert Product
     const { data: newProduct, error: productError } = await supabase
       .from('products')
-      .insert({
-        ...product,
-        slug,
-      })
+      .insert({ ...product, slug })
       .select()
       .single()
 
     if (productError) throw productError
 
-    // Insert Variants
+    // FIX #8: Batch inserts instead of sequential loops
     if (variants.length > 0) {
-      const variantPayload = variants.map((v) => ({
-        ...v,
-        product_id: newProduct.id,
-      }))
+      const variantPayload = variants.map((v) => ({ ...v, product_id: newProduct.id }))
       const { error: variantError } = await supabase.from('product_variants').insert(variantPayload)
       if (variantError) throw variantError
     }
 
-    // Insert Images
     if (images.length > 0) {
-      const imagePayload = images.map((img) => ({
-        ...img,
-        product_id: newProduct.id,
-      }))
+      const imagePayload = images.map((img) => ({ ...img, product_id: newProduct.id }))
       const { error: imageError } = await supabase.from('product_images').insert(imagePayload)
       if (imageError) throw imageError
     }
@@ -177,13 +187,13 @@ export const productsApi = {
     return newProduct as Product
   },
 
+  // FIX #8: Replace sequential loops with batch UPSERT operations
   updateProduct: async (
     id: string,
     product: Partial<Product>,
     variants?: Array<Partial<ProductVariant> & { id?: string }>,
     images?: Array<Partial<ProductImage> & { id?: string }>
   ): Promise<void> => {
-    // Update Product Info
     const { error: productError } = await supabase
       .from('products')
       .update(product)
@@ -191,25 +201,45 @@ export const productsApi = {
 
     if (productError) throw productError
 
-    // Sync/Update Variants
-    if (variants) {
-      for (const variant of variants) {
-        if (variant.id) {
-          await supabase.from('product_variants').update(variant).eq('id', variant.id)
-        } else {
-          await supabase.from('product_variants').insert({ ...variant, product_id: id })
-        }
+    if (variants && variants.length > 0) {
+      const toUpdate = variants.filter((v) => v.id)
+      const toInsert = variants.filter((v) => !v.id)
+
+      // Batch upsert existing variants
+      if (toUpdate.length > 0) {
+        const { error } = await supabase
+          .from('product_variants')
+          .upsert(toUpdate.map((v) => ({ ...v, product_id: id })), { onConflict: 'id' })
+        if (error) throw error
+      }
+
+      // Batch insert new variants
+      if (toInsert.length > 0) {
+        const { error } = await supabase
+          .from('product_variants')
+          .insert(toInsert.map((v) => ({ ...v, product_id: id })))
+        if (error) throw error
       }
     }
 
-    // Sync/Update Images
-    if (images) {
-      for (const image of images) {
-        if (image.id) {
-          await supabase.from('product_images').update(image).eq('id', image.id)
-        } else {
-          await supabase.from('product_images').insert({ ...image, product_id: id })
-        }
+    if (images && images.length > 0) {
+      const toUpdate = images.filter((img) => img.id)
+      const toInsert = images.filter((img) => !img.id)
+
+      // Batch upsert existing images
+      if (toUpdate.length > 0) {
+        const { error } = await supabase
+          .from('product_images')
+          .upsert(toUpdate.map((img) => ({ ...img, product_id: id })), { onConflict: 'id' })
+        if (error) throw error
+      }
+
+      // Batch insert new images
+      if (toInsert.length > 0) {
+        const { error } = await supabase
+          .from('product_images')
+          .insert(toInsert.map((img) => ({ ...img, product_id: id })))
+        if (error) throw error
       }
     }
   },

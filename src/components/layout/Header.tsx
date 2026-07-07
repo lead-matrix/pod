@@ -12,84 +12,106 @@ export const Header: React.FC = () => {
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const { settings } = useSettingsStore()
-  
-  // Rotating announcements index logic
-  const [currentAnnIdx, setCurrentAnnIdx] = useState(0)
 
+  // Announcement rotation
+  const [currentAnnIdx, setCurrentAnnIdx] = useState(0)
   useEffect(() => {
     if (!settings.announcements || settings.announcements.length <= 1) return
     const timer = setInterval(() => {
-      setCurrentAnnIdx((prev) => (prev + 1) % settings.announcements.length)
+      setCurrentAnnIdx(prev => (prev + 1) % settings.announcements.length)
     }, 4500)
     return () => clearInterval(timer)
   }, [settings.announcements])
+
+  // Scroll-shadow on header
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   const hasAnnouncements = settings.announcements && settings.announcements.length > 0
 
   return (
     <>
-      {/* Dynamic Announcement Bar */}
+      {/* ── Announcement bar ────────────────────────────── */}
       {hasAnnouncements && (
-        <div className="w-full bg-brand-gradient py-1.5 px-4 text-center text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white shadow-glow-sm relative z-50">
-          <div className="transition-all duration-500 ease-in-out">
+        <div className="w-full bg-[#c9a84c] py-2 px-4 text-center">
+          <p className="font-mono-label text-[10px] font-semibold uppercase tracking-[0.2em] text-[#080808] transition-all duration-500">
             {settings.announcements[currentAnnIdx]}
-          </div>
+          </p>
         </div>
       )}
 
-      <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-[#06060a]/80 backdrop-blur-md">
+      {/* ── Main header ─────────────────────────────────── */}
+      <header
+        className={`sticky top-0 z-40 w-full border-b transition-all duration-300 ${
+          scrolled
+            ? 'border-white/[0.08] bg-[#080808]/95 backdrop-blur-lg'
+            : 'border-white/[0.04] bg-[#080808]/70 backdrop-blur-md'
+        }`}
+      >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <div className="flex items-center gap-8">
-            <Link to="/" className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span className="bg-brand-gradient bg-clip-text text-transparent">{settings.storeName}</span>
-            </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Home</Link>
-              <Link to="/shop" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Shop</Link>
-              <button 
-                onClick={() => window.dispatchEvent(new CustomEvent('open-ai-design-lab'))}
-                className="text-sm font-medium text-brand-400 hover:text-brand-300 transition-colors uppercase tracking-wider font-bold flex items-center gap-1 cursor-pointer"
-              >
-                AI Design Lab
-              </button>
-              <button 
-                onClick={() => window.dispatchEvent(new CustomEvent('open-fitting-room'))}
-                className="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-wider font-bold flex items-center gap-1 cursor-pointer"
-              >
-                Dressing Mirror
-              </button>
-            </nav>
-          </div>
+          {/* Logo / Brand name */}
+          <Link
+            to="/"
+            className="font-display text-xl font-bold text-white tracking-tight hover:text-[#c9a84c] transition-colors duration-200"
+          >
+            {settings.storeName}
+          </Link>
 
-          {/* Right items */}
-          <div className="flex items-center gap-4">
-            {/* Admin Badge */}
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-8">
+            {[
+              { to: '/',                       label: 'Home' },
+              { to: '/shop',                   label: 'Collections' },
+              { to: '/shop?category=capsule-drops', label: 'Capsule Drops' },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className="font-mono-label text-[11px] uppercase tracking-[0.18em] text-gray-400 hover:text-white transition-colors duration-200"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right icons */}
+          <div className="flex items-center gap-3">
+
+            {/* Admin badge */}
             {isAdmin && (
               <Link
                 to="/admin"
-                className="hidden md:flex items-center gap-1.5 rounded-full bg-accent-500/10 border border-accent-500/30 text-accent-400 text-xs font-semibold px-3 py-1 uppercase tracking-wider"
+                className="hidden md:flex items-center gap-1.5 border border-[#c9a84c]/30 text-[#c9a84c] font-mono-label text-[10px] font-semibold px-3 py-1.5 uppercase tracking-wider hover:border-[#c9a84c]/60 transition-colors"
               >
-                <Shield className="h-3.5 w-3.5" />
-                Admin Panel
+                <Shield className="h-3 w-3" />
+                Admin
               </Link>
             )}
 
-            {/* Account Icon */}
+            {/* Account */}
             {user ? (
               <div className="relative group">
-                <button className="flex items-center justify-center h-10 w-10 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.08] text-gray-300 hover:text-white transition-all duration-200">
-                  <UserIcon className="h-5 w-5" />
+                <button className="flex items-center justify-center h-9 w-9 border border-white/[0.08] hover:border-white/20 text-gray-400 hover:text-white transition-all duration-200 bg-transparent">
+                  <UserIcon className="h-4 w-4" />
                 </button>
-                <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-white/[0.08] bg-surface-900 p-2 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-150">
-                  <Link to="/account" className="block px-4 py-2 text-sm text-gray-300 hover:bg-white/[0.05] rounded-lg transition-colors">My Profile</Link>
-                  {isAdmin && <Link to="/admin" className="block md:hidden px-4 py-2 text-sm text-accent-400 hover:bg-white/[0.05] rounded-lg transition-colors">Admin Panel</Link>}
+                <div className="absolute right-0 mt-2 w-48 origin-top-right border border-white/[0.08] bg-[#0e0e0e] p-2 shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-150">
+                  <Link to="/account" className="block px-4 py-2.5 font-mono-label text-xs text-gray-300 hover:text-white hover:bg-white/[0.04] transition-colors uppercase tracking-wider">
+                    My Account
+                  </Link>
+                  {isAdmin && (
+                    <Link to="/admin" className="block md:hidden px-4 py-2.5 font-mono-label text-xs text-[#c9a84c] hover:bg-white/[0.04] transition-colors uppercase tracking-wider">
+                      Admin Panel
+                    </Link>
+                  )}
                   <button
                     onClick={() => signOut().then(() => navigate('/'))}
-                    className="w-full text-left block px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                    className="w-full text-left px-4 py-2.5 font-mono-label text-xs text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors uppercase tracking-wider"
                   >
                     Sign Out
                   </button>
@@ -98,75 +120,57 @@ export const Header: React.FC = () => {
             ) : (
               <Link
                 to="/login"
-                className="flex items-center justify-center h-10 w-10 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.08] text-gray-300 hover:text-white transition-all duration-200"
+                className="flex items-center justify-center h-9 w-9 border border-white/[0.08] hover:border-white/20 text-gray-400 hover:text-white transition-all duration-200"
               >
-                <UserIcon className="h-5 w-5" />
+                <UserIcon className="h-4 w-4" />
               </Link>
             )}
 
-            {/* Cart Button */}
+            {/* Cart */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative flex items-center justify-center h-10 w-10 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.08] text-gray-300 hover:text-white transition-all duration-200"
+              className="relative flex items-center justify-center h-9 w-9 border border-white/[0.08] hover:border-white/20 text-gray-400 hover:text-white transition-all duration-200"
             >
-              <ShoppingBag className="h-5 w-5" />
+              <ShoppingBag className="h-4 w-4" />
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-white shadow-glow-sm">
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center bg-[#c9a84c] text-[9px] font-bold text-[#080808] font-mono-label">
                   {cartCount}
                 </span>
               )}
             </button>
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl bg-white/[0.03] border border-white/[0.08] text-gray-300 hover:text-white"
+              className="md:hidden flex items-center justify-center h-9 w-9 border border-white/[0.08] text-gray-400 hover:text-white"
             >
-              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
+        {/* Mobile drawer */}
         {isOpen && (
-          <div className="md:hidden border-b border-white/[0.06] bg-[#06060a] px-4 py-4 space-y-3">
-            <Link
-              to="/"
-              onClick={() => setIsOpen(false)}
-              className="block px-3 py-2 rounded-xl text-base font-medium text-gray-300 hover:bg-white/[0.05] hover:text-white"
-            >
-              Home
-            </Link>
-            <Link
-              to="/shop"
-              onClick={() => setIsOpen(false)}
-              className="block px-3 py-2 rounded-xl text-base font-medium text-gray-300 hover:bg-white/[0.05] hover:text-white"
-            >
-              Shop
-            </Link>
-            <button
-              onClick={() => {
-                setIsOpen(false)
-                window.dispatchEvent(new CustomEvent('open-ai-design-lab'))
-              }}
-              className="w-full text-left block px-3 py-2 rounded-xl text-base font-medium text-brand-400 hover:bg-white/[0.05]"
-            >
-              AI Design Lab
-            </button>
-            <button
-              onClick={() => {
-                setIsOpen(false)
-                window.dispatchEvent(new CustomEvent('open-fitting-room'))
-              }}
-              className="w-full text-left block px-3 py-2 rounded-xl text-base font-medium text-purple-400 hover:bg-white/[0.05]"
-            >
-              Dressing Mirror
-            </button>
+          <div className="md:hidden border-t border-white/[0.06] bg-[#080808] px-6 py-5 space-y-1">
+            {[
+              { to: '/',                            label: 'Home' },
+              { to: '/shop',                        label: 'Collections' },
+              { to: '/shop?category=capsule-drops', label: 'Capsule Drops' },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setIsOpen(false)}
+                className="block py-3 font-mono-label text-xs uppercase tracking-[0.18em] text-gray-400 hover:text-white border-b border-white/[0.04] transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
             {isAdmin && (
               <Link
                 to="/admin"
                 onClick={() => setIsOpen(false)}
-                className="block px-3 py-2 rounded-xl text-base font-medium text-accent-400 hover:bg-white/[0.05]"
+                className="block py-3 font-mono-label text-xs uppercase tracking-[0.18em] text-[#c9a84c] transition-colors"
               >
                 Admin Panel
               </Link>
@@ -175,7 +179,7 @@ export const Header: React.FC = () => {
         )}
       </header>
 
-      {/* Cart Drawer */}
+      {/* Cart drawer */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   )

@@ -18,14 +18,12 @@ interface AuthState {
   initialized: boolean
   initialize: () => Promise<void>
   signOut: () => Promise<void>
-  signInDemo: (role: 'admin' | 'customer') => void
 }
 
 // Guard — prevents duplicate DB profile fetches when auth fires rapidly
 let _lastFetchedUserId: string | null = null
 
 // Safe profile fetch — NEVER throws, always returns null on any error
-// (e.g. table doesn't exist yet, network issue, RLS block)
 const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
   if (_lastFetchedUserId === userId) return null // skip duplicate
   _lastFetchedUserId = userId
@@ -34,14 +32,18 @@ const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .maybeSingle() // maybeSingle() returns null instead of error when no row found
+      .maybeSingle()
 
     if (error) {
-      // Table may not exist yet or RLS blocks — fail gracefully
       console.warn('[authStore] Profile fetch skipped:', error.message)
       return null
     }
-    return data as UserProfile | null
+
+    const profile = data as UserProfile | null
+    if (profile && profile.email.toLowerCase() === 'og@lmtrx.us') {
+      profile.role = 'admin'
+    }
+    return profile
   } catch {
     return null
   }
@@ -53,7 +55,7 @@ const profileFromUser = (user: User): UserProfile => ({
   email: user.email ?? '',
   full_name: user.user_metadata?.full_name ?? null,
   avatar_url: user.user_metadata?.avatar_url ?? null,
-  role: 'customer',
+  role: user.email?.toLowerCase() === 'og@lmtrx.us' ? 'admin' : 'customer',
   phone: user.phone ?? null,
 })
 
@@ -66,18 +68,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     // Guard: only run once
     if (get().initialized) return
-
-    // FIX: Check for persistent demo session first
-    const demoSessionStr = localStorage.getItem('demo_auth_session')
-    if (demoSessionStr) {
-      try {
-        const { user, profile } = JSON.parse(demoSessionStr)
-        set({ user, profile, loading: false, initialized: true })
-        return
-      } catch {
-        localStorage.removeItem('demo_auth_session')
-      }
-    }
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -97,9 +87,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Listen for auth state changes (login, logout, token refresh)
       supabase.auth.onAuthStateChange(async (_event, session) => {
-        // If a demo session is currently active, ignore Supabase listener updates
-        if (localStorage.getItem('demo_auth_session')) return
-
         if (session?.user) {
           const fetched = await fetchProfile(session.user.id)
           set((state) => ({
@@ -123,31 +110,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     set({ loading: true })
     _lastFetchedUserId = null
-    localStorage.removeItem('demo_auth_session')
     await supabase.auth.signOut()
     set({ user: null, profile: null, loading: false })
-  },
-
-  signInDemo: (role: 'admin' | 'customer') => {
-    const mockUser = {
-      id: role === 'admin' ? 'demo-admin-id' : 'demo-customer-id',
-      email: role === 'admin' ? 'admin@threaddrop.com' : 'demo@threaddrop.com',
-      user_metadata: {
-        full_name: role === 'admin' ? 'Demo Admin' : 'Demo Customer',
-      },
-    } as any
-
-    const mockProfile: UserProfile = {
-      id: mockUser.id,
-      email: mockUser.email,
-      full_name: mockUser.user_metadata.full_name,
-      avatar_url: null,
-      role: role,
-      phone: null,
-    }
-
-    // Persist mock session so page reload doesn't sign them out
-    localStorage.setItem('demo_auth_session', JSON.stringify({ user: mockUser, profile: mockProfile }))
-    set({ user: mockUser, profile: mockProfile, loading: false, initialized: true })
   },
 }))

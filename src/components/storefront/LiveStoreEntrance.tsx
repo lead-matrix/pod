@@ -211,7 +211,7 @@ export const LiveStoreEntrance: React.FC<LiveStoreEntranceProps> = ({ onEnter })
 
         {/* Dynamic Brand Logo Headline */}
         <h1 className="text-5xl md:text-6xl font-bold font-display text-white tracking-tight select-none">
-          ThreadDrop
+          LMTRX
         </h1>
         <div className="h-[1px] w-20 bg-[#c9a84c] my-5" />
         <p className="text-gray-500 text-sm md:text-base max-w-sm tracking-wide leading-relaxed font-light">

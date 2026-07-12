@@ -19,19 +19,19 @@ interface SettingsState {
 }
 
 const defaultSettings: StoreSettings = {
-  storeName: 'ThreadDrop',
-  supportEmail: 'support@threaddrop.com',
+  storeName: 'LMTRX',
+  supportEmail: 'og@lmtrx.us',
   announcements: [
-    '💥 DROP 001 IS NOW LIVE — LIMIT QUANTITIES',
-    '✈️ FREE WORLDWIDE SHIPPING ON ORDERS OVER $75',
-    '⚡ GET 15% OFF YOUR FIRST ORDER USING CODE: WELCOME15'
+    '◆ COLLECTION 01 IS NOW LIVE — EXTREMELY LIMITED QUANTITIES',
+    '◆ COMPLIMENTARY EXPRESS SHIPPING ON ORDERS OVER $150',
+    '◆ LOG IN FOR EXCLUSIVE MEMBER CAPSULES'
   ],
   maintenanceMode: false,
-  tiktokUrl: 'https://tiktok.com/@threaddrop',
-  instagramUrl: 'https://instagram.com/@threaddrop',
-  youtubeUrl: 'https://youtube.com/@threaddrop',
-  heroTitle: 'RARE APPAREL FOR RARE SOULS',
-  heroSubtitle: 'Limited drops. Automatic print-on-demand fulfillment. Built to stand out.',
+  tiktokUrl: 'https://tiktok.com/@lmtrx',
+  instagramUrl: 'https://instagram.com/@lmtrx',
+  youtubeUrl: 'https://youtube.com/@lmtrx',
+  heroTitle: 'WEAR THE DIFFERENCE',
+  heroSubtitle: 'Hand-crafted premium drops. Dynamic human model presentations. Engineered for high-fashion liveness.',
 }
 
 export const useSettingsStore = create<SettingsState>()(
